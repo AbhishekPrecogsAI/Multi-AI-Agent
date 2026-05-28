@@ -16,20 +16,14 @@
 import { llm } from "../llm.js";
 
 export async function plannerAgent(state) {
-  console.log("[planner] called, model=", llm.model, "input=", state.userInput);
-  try {
-    const response = await llm
-      .withConfig({ tags: ["agent:planner"], runName: "planner" })
-      .invoke(`Create a clear, numbered execution plan for the task below.
+  const response = await llm
+    .withConfig({ tags: ["agent:planner"], runName: "planner" })
+    .invoke(`Create a clear, numbered execution plan for the task below.
 
 Task:
 ${state.userInput}`);
-    console.log("[planner] got response, len=", String(response.content).length);
-    return { plannerOutput: response.content };
-  } catch (e) {
-    console.error("[planner] LLM CALL FAILED:", e?.name, e?.message);
-    throw e;
-  }
+
+  return { plannerOutput: response.content };
 }
 
 export async function researchAgent(state) {

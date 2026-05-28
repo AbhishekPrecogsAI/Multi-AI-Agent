@@ -50,7 +50,6 @@ async function runGraphWithSse(res, { userInput, runId, abortSignal }) {
   // pipeline-as-a-whole "state" event sent at the end of the run.
   const finalState = {};
 
-  console.log(`[run ${runId}] opening graph.stream...`);
   const stream = await graph.stream(
     { userInput },
     {
@@ -59,12 +58,8 @@ async function runGraphWithSse(res, { userInput, runId, abortSignal }) {
       configurable: { thread_id: runId },
     },
   );
-  console.log(`[run ${runId}] stream opened, entering for-await...`);
 
-  let yielded = 0;
   for await (const [mode, payload] of stream) {
-    yielded++;
-    console.log(`[run ${runId}] yield #${yielded} mode=${mode}`);
     if (abortSignal.aborted) break;
 
     if (mode === "messages") {
@@ -100,7 +95,6 @@ async function runGraphWithSse(res, { userInput, runId, abortSignal }) {
     }
   }
 
-  console.log(`[run ${runId}] for-await exited cleanly, yielded=${yielded}`);
   sendSse(res, "state", { state: finalState, runId });
 }
 
@@ -141,23 +135,23 @@ router.post("/run", async (req, res) => {
     if (!res.writableEnded) abort.abort();
   });
 
-  // TEMP DIAG — remove once root cause is found.
-  console.log(`[run ${runId}] starting, input=${JSON.stringify(userInput)}`);
+  console.log(`[run ${runId}] start — "${userInput.slice(0, 60)}${userInput.length > 60 ? "…" : ""}"`);
 
   try {
     await runGraphWithSse(res, { userInput, runId, abortSignal: abort.signal });
-    console.log(`[run ${runId}] graph finished cleanly`);
+    console.log(`[run ${runId}] done`);
     sendSse(res, "done", { runId, ts: Date.now() });
   } catch (err) {
-    console.error(`[run ${runId}] CAUGHT ${err?.name ?? "Error"}:`, err?.message ?? err);
-    console.error(err?.stack);
-    sendSse(res, "error", {
-      runId,
-      name: err?.name,
-      message: err?.message ?? "Unknown error",
-    });
+    // AbortError is expected on client disconnect — don't treat it as a failure.
+    if (err?.name !== "AbortError") {
+      console.error(`[run ${runId}] failed:`, err);
+      sendSse(res, "error", {
+        runId,
+        name: err?.name,
+        message: err?.message ?? "Unknown error",
+      });
+    }
   } finally {
-    console.log(`[run ${runId}] finally; aborted=${abort.signal.aborted}`);
     stopHeartbeat();
     if (!res.writableEnded) res.end();
   }
