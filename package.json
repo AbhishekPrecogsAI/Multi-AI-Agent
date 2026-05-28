@@ -1,0 +1,19 @@
+{
+  "name": "multiaiagent",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@langchain/langgraph": "^1.3.2",
+    "@langchain/openai": "^1.4.7",
+    "dotenv": "^17.4.2",
+    "zod": "^4.4.3"
+  }
+}
