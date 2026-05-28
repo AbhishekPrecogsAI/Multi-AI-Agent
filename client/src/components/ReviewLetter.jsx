@@ -1,5 +1,8 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import CodeBlock from "./CodeBlock";
+
+const markdownComponents = { code: CodeBlock };
 
 /**
  * ReviewLetter — the final synthesis from the Reviewer.
@@ -40,7 +43,7 @@ export default function ReviewLetter({ reviewer }) {
 
       <div className="px-8 md:px-14 lg:px-20 py-8">
         <div className="prose-dark" style={{ fontSize: "1.04rem" }}>
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
             {reviewer.output}
           </ReactMarkdown>
         </div>

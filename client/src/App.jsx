@@ -2,7 +2,7 @@ import { useAgentRun } from "./lib/useAgentRun";
 import Masthead     from "./components/Masthead";
 import PromptField  from "./components/PromptField";
 import Topology     from "./components/Topology";
-import AgentPlate   from "./components/AgentPlate";
+import AgentConsole from "./components/AgentConsole";
 import ReviewLetter from "./components/ReviewLetter";
 
 /**
@@ -11,9 +11,11 @@ import ReviewLetter from "./components/ReviewLetter";
  *   ┌──────────────── masthead + status ───────────────┐
  *   │                  prompt field                    │
  *   ├────────────────┬─────────────────────────────────┤
- *   │   topology     │  planner                        │
- *   │   (sticky)     │  research  |  coder             │
- *   │   legend       │  reviewer                       │
+ *   │   topology     │ ┌─ tabs ─────────────────────┐  │
+ *   │   (sticky)     │ │ planner research coder rev │  │
+ *   │   telemetry    │ │ ──────                     │  │
+ *   │                │ │ (live transcript / md)     │  │
+ *   │                │ └────────────────────────────┘  │
  *   ├────────────────┴─────────────────────────────────┤
  *   │            reviewer's verdict (unfolds)          │
  *   └──────────────────────────────────────────────────┘
@@ -44,31 +46,11 @@ export default function App() {
         <section className="mt-12 grid grid-cols-1 lg:grid-cols-[minmax(320px,420px)_1fr] gap-8">
           <div className="lg:sticky lg:top-6 lg:self-start fade-up" style={{ animationDelay: "0.3s" }}>
             <Topology agents={run.agents} />
-            <Legend agents={run.agents} />
+            <Telemetry agents={run.agents} />
           </div>
 
-          <div className="space-y-6">
-            <div className="flex items-baseline justify-between">
-              <span className="kicker">§ Transcripts</span>
-              <span className="kicker text-fg-dim">live · verbatim</span>
-            </div>
-
-            <div className="fade-up" style={{ animationDelay: "0.4s" }}>
-              <AgentPlate id="planner" agent={run.agents.planner} />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="fade-up" style={{ animationDelay: "0.5s" }}>
-                <AgentPlate id="research" agent={run.agents.research} />
-              </div>
-              <div className="fade-up" style={{ animationDelay: "0.55s" }}>
-                <AgentPlate id="coder" agent={run.agents.coder} />
-              </div>
-            </div>
-
-            <div className="fade-up" style={{ animationDelay: "0.65s" }}>
-              <AgentPlate id="reviewer" agent={run.agents.reviewer} />
-            </div>
+          <div className="fade-up" style={{ animationDelay: "0.4s" }}>
+            <AgentConsole agents={run.agents} runId={run.runId} />
           </div>
         </section>
 
@@ -80,7 +62,7 @@ export default function App() {
   );
 }
 
-function Legend({ agents }) {
+function Telemetry({ agents }) {
   const total = Object.values(agents).reduce(
     (a, x) => a + (x.tokens?.length || x.output?.length || 0),
     0,
@@ -101,9 +83,9 @@ function Legend({ agents }) {
         </span>
       </div>
       <ul className="grid grid-cols-3 gap-2 text-center">
-        <Stat label="idle"    value={counts.idle}    tone="idle"    />
-        <Stat label="active"  value={counts.running} tone="live"    />
-        <Stat label="settled" value={counts.done}    tone="done"    />
+        <Stat label="idle"    value={counts.idle}    tone="idle" />
+        <Stat label="active"  value={counts.running} tone="live" />
+        <Stat label="settled" value={counts.done}    tone="done" />
       </ul>
     </aside>
   );
